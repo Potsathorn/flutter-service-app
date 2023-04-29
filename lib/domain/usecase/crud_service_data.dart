@@ -14,8 +14,10 @@ class CrudServiceData {
       serviceDataRepository.getServiceData(page: page, limit: limit);
 
   //update
-  Future<ServiceData> update() => serviceDataRepository.updateServiceData();
+  Future<int> update({required ServiceData service}) =>
+      serviceDataRepository.updateServiceData(service: service);
 
   //delete
-  Future<ServiceData> delete() => serviceDataRepository.deleteServiceData();
+  Future<int> delete({required String key}) =>
+      serviceDataRepository.deleteServiceData(key: key);
 }

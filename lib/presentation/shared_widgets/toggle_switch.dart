@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:service_app/presentation/utils/app_color.dart';
 
@@ -18,6 +20,7 @@ class _ToggleSwitchState extends State<ToggleSwitch> {
   late bool isToggled;
   @override
   void initState() {
+    log("toggle create");
     isToggled = widget.initState;
     super.initState();
   }

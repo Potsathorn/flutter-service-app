@@ -19,9 +19,20 @@ abstract class LocalDataSource {
       {required int page, required int limit});
 
   Future<int> insertService({required ServiceDataModel service});
+
+  Future<int> updateService({required ServiceDataModel service});
+
+  Future<int> deleteService({required String key});
 }
 
 class LocalDataSourceImpl implements LocalDataSource {
+  String _generateRandomKey() {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    final random = Random();
+    return String.fromCharCodes(Iterable.generate(
+        4, (_) => chars.codeUnitAt(random.nextInt(chars.length))));
+  }
+
   @override
   Future<List<ServiceDataModel>> getService(
       {required int page, required int limit}) async {
@@ -40,16 +51,26 @@ class LocalDataSourceImpl implements LocalDataSource {
   @override
   Future<int> insertService({required ServiceDataModel service}) async {
     final serviceBox = Hive.box<ServiceDataModel>(ServiceDataModel.boxKey);
-    final id = _generateRandomKey();
+    late String id;
+    do {
+      id = _generateRandomKey();
+    } while (serviceBox.containsKey(id));
     service.id = id;
     serviceBox.put(id, service);
     return 1;
   }
 
-  String _generateRandomKey() {
-    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    final random = Random();
-    return String.fromCharCodes(Iterable.generate(
-        4, (_) => chars.codeUnitAt(random.nextInt(chars.length))));
+  @override
+  Future<int> updateService({required ServiceDataModel service}) async {
+    final serviceBox = Hive.box<ServiceDataModel>(ServiceDataModel.boxKey);
+    serviceBox.put(service.id, service);
+    return 1;
+  }
+
+  @override
+  Future<int> deleteService({required String key}) async {
+    final serviceBox = Hive.box<ServiceDataModel>(ServiceDataModel.boxKey);
+    serviceBox.delete(key);
+    return 1;
   }
 }

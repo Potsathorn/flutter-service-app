@@ -25,6 +25,7 @@ class _ServiceDetailState extends State<ServiceDetail> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _urlController = TextEditingController();
+  final TextEditingController _priceController = TextEditingController();
   final TextEditingController _locationController =
       TextEditingController(text: "Bangkok, Thailand");
 
@@ -36,9 +37,21 @@ class _ServiceDetailState extends State<ServiceDetail> {
   ];
 
   bool _isOn = true;
+  bool _isCreate = true;
+  dynamic arguments = Get.arguments ?? {};
+  ServiceData? _service;
 
   @override
   void initState() {
+    _service = arguments['service'];
+    if (_service != null) {
+      _isCreate = false;
+      _nameController.text = _service!.name;
+      _descriptionController.text = _service!.description;
+      _urlController.text = _service!.website;
+      _priceController.text = Helper.priceFormat(_service!.price);
+      _isOn = _service!.isActive;
+    }
     super.initState();
   }
 
@@ -49,23 +62,32 @@ class _ServiceDetailState extends State<ServiceDetail> {
     _descriptionController.dispose();
     _urlController.dispose();
     _locationController.dispose();
+    _priceController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final serviceDataNotifier = Provider.of<ServiceDataNotifier>(context);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text("Service Detail"),
         actions: [
-          IconButton(
-              onPressed: () async => await Get.dialog(_dleteAlertDialog()),
-              icon: const Icon(
-                Icons.delete_outline,
-                size: 30,
-              ))
+          if (!_isCreate)
+            IconButton(
+                onPressed: () async {
+                  await Get.dialog(_deleteAlertDialog(onTapCancel: () {
+                    Get.back();
+                  }, onTapDelete: () async {
+                    serviceDataNotifier.deleteServiceData(_service!.id);
+                    Get.offNamedUntil(
+                        Routes.serviceList, (route) => route.isFirst);
+                  }));
+                },
+                icon: const Icon(
+                  Icons.delete_outline,
+                  size: 30,
+                ))
         ],
       ),
       body: Padding(
@@ -96,6 +118,7 @@ class _ServiceDetailState extends State<ServiceDetail> {
                       title: "Website URL",
                       controller: _urlController,
                       isOptional: true),
+                  Input(title: "Price", controller: _priceController),
                   _activeSwitch()
                 ]),
                 _card(
@@ -116,18 +139,23 @@ class _ServiceDetailState extends State<ServiceDetail> {
                 _submit(onPressed: () {
                   {
                     ServiceData service = ServiceData(
-                        id: "",
-                        time: DateTime.now(),
+                        id: _isCreate ? "" : _service!.id,
+                        time: _isCreate ? DateTime.now() : _service!.time,
                         name: _nameController.text,
                         description: _descriptionController.text,
                         location: _locationController.text,
                         website: _urlController.text,
                         isActive: _isOn,
-                        price: 1500,
+                        price: double.tryParse(
+                                _priceController.text.replaceAll(',', '')) ??
+                            0,
                         image: [],
                         option: []);
-                    serviceDataNotifier.insertServiceData(service);
-                    Get.back();
+                    _isCreate
+                        ? serviceDataNotifier.insertServiceData(service)
+                        : serviceDataNotifier.updateServiceData(service);
+                    Get.offNamedUntil(
+                        Routes.serviceList, (route) => route.isFirst);
                   }
                 })
               ],
@@ -312,6 +340,7 @@ class _ServiceDetailState extends State<ServiceDetail> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ToggleSwitch(
+                initState: _isOn,
                 onToggle: (isOn) {
                   _isOn = isOn;
                 },
@@ -393,7 +422,10 @@ class _ServiceDetailState extends State<ServiceDetail> {
         ],
       );
 
-  Widget _dleteAlertDialog() => AlertDialog(
+  Widget _deleteAlertDialog(
+          {required void Function() onTapCancel,
+          required void Function() onTapDelete}) =>
+      AlertDialog(
         title: Container(
             alignment: Alignment.center,
             child: const Text('Delete this Service')),
@@ -404,18 +436,14 @@ class _ServiceDetailState extends State<ServiceDetail> {
         actionsAlignment: MainAxisAlignment.spaceAround,
         actions: [
           TextButton(
-            onPressed: () {
-              Get.back();
-            },
+            onPressed: onTapCancel,
             child: const Text(
               'Cancel',
               style: TextStyle(color: AppColor.primary),
             ),
           ),
           ElevatedButton(
-            onPressed: () {
-              Get.back();
-            },
+            onPressed: onTapDelete,
             style: ElevatedButton.styleFrom(
               foregroundColor: AppColor.white,
               backgroundColor: AppColor.failure,
@@ -430,7 +458,7 @@ class _ServiceDetailState extends State<ServiceDetail> {
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         child: ElevatedButton(
           onPressed: onPressed,
-          child: const Text('Publish'),
+          child: Text(_isCreate ? "publish" : "save"),
         ),
       );
 }

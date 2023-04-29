@@ -12,12 +12,6 @@ class ServiceDataRepositoryImpl implements ServiceDataRepository {
   ServiceDataRepositoryImpl({required this.localDataSource});
 
   @override
-  Future<ServiceData> deleteServiceData() {
-    // TODO: implement deleteServiceData
-    throw UnimplementedError();
-  }
-
-  @override
   Future<List<ServiceData>> getServiceData(
       {required int page, required int limit}) async {
     try {
@@ -33,16 +27,32 @@ class ServiceDataRepositoryImpl implements ServiceDataRepository {
   @override
   Future<int> insertServiceData({required ServiceData service}) async {
     try {
-      await localDataSource.insertService(service: service.toModel());
-      return 1;
+      int result =
+          await localDataSource.insertService(service: service.toModel());
+      return result;
     } catch (e) {
       throw Exception(e.toString());
     }
   }
 
   @override
-  Future<ServiceData> updateServiceData() {
-    // TODO: implement updateServiceData
-    throw UnimplementedError();
+  Future<int> updateServiceData({required ServiceData service}) async {
+    try {
+      int result =
+          await localDataSource.updateService(service: service.toModel());
+      return result;
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  @override
+  Future<int> deleteServiceData({required String key}) async {
+    try {
+      int result = await localDataSource.deleteService(key: key);
+      return result;
+    } catch (e) {
+      throw Exception(e.toString());
+    }
   }
 }

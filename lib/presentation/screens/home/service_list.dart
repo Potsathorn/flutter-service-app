@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
@@ -20,6 +22,7 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
   @override
   void initState() {
     super.initState();
+    log("list page created");
     final priceDataNotifier =
         Provider.of<ServiceDataNotifier>(context, listen: false);
     priceDataNotifier.clearService();
@@ -31,8 +34,8 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
     super.dispose();
   }
 
-  void _gotoServiceDetail() {
-    Get.toNamed(Routes.serviceDetail);
+  void _gotoServiceDetail(dynamic argument) {
+    Get.toNamed(Routes.serviceDetail, arguments: argument);
   }
 
   void _showOptions() {
@@ -92,7 +95,13 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
                             title: serviceDataNotifier.serviceDataList[i].name,
                             price: serviceDataNotifier.serviceDataList[i].price,
                             isActive:
-                                serviceDataNotifier.serviceDataList[i].isActive)
+                                serviceDataNotifier.serviceDataList[i].isActive,
+                            onTap: () => _gotoServiceDetail({
+                                  'service':
+                                      serviceDataNotifier.serviceDataList[i]
+                                }),
+                            onToggle: (bool isOn) => serviceDataNotifier
+                                .updateStatus(index: i, status: isOn))
                     ],
                   )
           ],
@@ -137,7 +146,7 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
             width: 8,
           ),
           OutlinedButton(
-            onPressed: _gotoServiceDetail,
+            onPressed: () => _gotoServiceDetail(null),
             style: OutlinedButton.styleFrom(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(5),
@@ -160,7 +169,7 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
           SizedBox(
             width: Get.width / 2.5,
             child: ElevatedButton(
-              onPressed: _gotoServiceDetail,
+              onPressed: () => _gotoServiceDetail(null),
               child: const Text("+ Create Service"),
             ),
           ),
@@ -170,58 +179,64 @@ class _ServiceListScreenState extends State<ServiceListScreen> {
   Widget _serviceCard(
           {required String title,
           required double price,
-          required bool isActive}) =>
-      Container(
-        height: 120,
-        width: Get.width,
-        padding: const EdgeInsets.all(12),
-        margin: const EdgeInsets.symmetric(vertical: 5),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          color: AppColor.white,
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              height: 100,
-              width: 100,
-              padding: const EdgeInsets.all(2),
-              margin: const EdgeInsets.only(right: 10),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                color: AppColor.accent,
+          required bool isActive,
+          void Function()? onTap,
+          required void Function(bool) onToggle}) =>
+      InkWell(
+        onTap: onTap,
+        child: Container(
+          height: 120,
+          width: Get.width,
+          padding: const EdgeInsets.all(12),
+          margin: const EdgeInsets.symmetric(vertical: 5),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: AppColor.white,
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                height: 100,
+                width: 100,
+                padding: const EdgeInsets.all(2),
+                margin: const EdgeInsets.only(right: 10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: AppColor.accent,
+                ),
+                child: const Icon(
+                  Icons.yard_outlined,
+                  color: AppColor.primary,
+                  size: 60,
+                ),
               ),
-              child: const Icon(
-                Icons.local_movies_outlined,
-                color: AppColor.primary,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 18,
+                        )),
+                    Text("${Helper.priceFormat(price)} THB",
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ))
+                  ],
+                ),
               ),
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(title,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 18,
-                      )),
-                  Text("${Helper.priceFormat(price)} THB",
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ))
-                ],
-              ),
-            ),
-            SizedBox(
-              child: ToggleSwitch(
-                initState: isActive,
-                onToggle: (bool isOn) {},
-              ),
-            )
-          ],
+              SizedBox(
+                child: ToggleSwitch(
+                  initState: isActive,
+                  onToggle: onToggle,
+                ),
+              )
+            ],
+          ),
         ),
       );
 

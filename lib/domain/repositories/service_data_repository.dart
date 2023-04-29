@@ -9,8 +9,8 @@ abstract class ServiceDataRepository {
       {required int page, required int limit});
 
   //update
-  Future<ServiceData> updateServiceData();
+  Future<int> updateServiceData({required ServiceData service});
 
   //delete
-  Future<ServiceData> deleteServiceData();
+  Future<int> deleteServiceData({required String key});
 }
